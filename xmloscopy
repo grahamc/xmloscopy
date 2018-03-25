@@ -74,6 +74,9 @@ contextualize() {
 
          errorstart=$(echo "$error" | cut -d ';' -f1)
          errorend=$(echo "$error" | cut -d ';' -f2-)
+         if [ "$errorstart" == "$errorend" ]; then
+             errorend=""
+         fi
          echo "Line $line:"
 
          pattern='^[[:space:]]*'"$line[[:space:]]"
