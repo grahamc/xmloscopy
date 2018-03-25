@@ -20,6 +20,8 @@ LIMITATIONS
     - Must run it it the parent directory of all your XML files
     - You should probably delete your <combined-document.xml> argument
       prior to running xmloscopy
+    - This one guy said this tool might make debuggging docbook more
+      frustrating. I'd like to see me try!
     - Only supports Docbook5 now
     - Isn't magic
 
