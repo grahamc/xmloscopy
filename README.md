@@ -2,7 +2,7 @@
 
 Demo finding obviously broken stuff:
 
-    nixpkgs/doc$ xmloscopy
+    nixpkgs/doc$ xmloscopy --docbook5 ./manual.xml ./manual-full.xml
         Feasability check on files without xincludes...
 
     A document is feasibly valid if it could be transformed into a valid
@@ -41,16 +41,6 @@ Demo finding obviously broken stuff:
 
 Demo finding other broken stuff:
 
-    nixpkgs/doc$ xmloscopy
-
-    <snip>
-
-        Checking files without xincludes, ignoring reference errors...
-
-    Ensures document fragments are valid, but without validating links
-    are valid.
-
-    <snip>
 
     ./coding-conventions.xml: Not valid:
     Line 9:
