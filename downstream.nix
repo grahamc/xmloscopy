@@ -42,4 +42,12 @@ stdenv.mkDerivation rec {
       --set RNG "${docbook5}/xml/rng/docbook/docbook.rng" \
       --set PATH "${spath}"
   '';
+
+  meta = {
+    description = "wtf is my docbook broken?";
+    homepage = https://github.com/grahamc/xmloscopy;
+    license = stdenv.lib.licenses.mit;
+    platforms = stdenv.lib.platforms.all;
+    maintainers = [ stdenv.lib.maintainers.grahamc ];
+  };
 }

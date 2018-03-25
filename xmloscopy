@@ -130,7 +130,6 @@ This option also disables checking that references are valid.
 EOF
 
 for f in $(files_without_xinclude); do
-    continue;
     if jing -f "$RNG" "$f" > "$scratch/errors" 2>&1; then
         echo "$f: OK"
     else
@@ -163,7 +162,6 @@ are valid.
 EOF
 
 for f in $(files_without_xinclude); do
-    continue;
     if jing -i "$RNG" "$f" > "$scratch/errors" 2>&1; then
         echo "$f: OK"
     else
