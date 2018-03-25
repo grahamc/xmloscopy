@@ -1,0 +1,199 @@
+#!/bin/bash
+
+set -eu
+set -o pipefail
+
+help() {
+    cat <<EOF
+${1:-}
+
+NAME
+    xmloscopy - wtf is my docbook broken?
+
+SYNOPSIS
+    xmloscopy <--docbook5> <root-document.xml> <combined-document.xml>
+
+DESCRIPTION
+    Tries to tell you why your docbook is broken.
+
+LIMITATIONS
+    - Must run it it the parent directory of all your XML files
+    - You should probably delete your <combined-document.xml> argument
+      prior to running xmloscopy
+    - Only supports Docbook5 now
+    - Isn't magic
+
+AUTHORS
+    Graham Christensen <graham@grahamc.com>
+
+REPORTING BUGS
+    https://github.com/grahamc/xmloscopy
+
+LICENSE
+    MIT
+
+VERSION
+    hard to say
+
+EOF
+    exit 1
+
+}
+
+if [ $# -ne 3 ]; then
+    help
+fi
+
+if [ "$1" != "--docbook5" ]; then
+    help "error: You MUST pass --docbook5 as the first argument"
+fi
+
+readonly ROOT=$2
+if [ ! -f "$ROOT" ]; then
+    help "error: root document $ROOT does not exist"
+fi
+
+readonly COMBINED=$3
+
+all_files() {
+    find . -name '*.xml' | grep -v "$COMBINED"
+}
+
+files_without_xinclude() {
+    all_files | xargs grep -L "xi:include"
+}
+
+contextualize() {
+    (while read -r x; do
+         filename=$(echo "$x" | cut -d ':' -f1)
+         line=$(echo "$x" | cut -d ':' -f2)
+         # character=$(echo "$x" | cut -d ':' -f3)
+         error=$(echo "$x" | cut -d ':' -f4-)
+
+         errorstart=$(echo "$error" | cut -d ';' -f1)
+         errorend=$(echo "$error" | cut -d ';' -f2-)
+         echo "Line $line:"
+
+         pattern='^[[:space:]]*'"$line[[:space:]]"
+         cat -n "$filename" | grep -E -B3 "$pattern" | sed '$ d'
+         echo -en "\e[1m"
+         cat -n "$filename" | grep -E "$pattern"
+         echo -en "\e[0m"
+         cat -n "$filename" | grep -E -A3 "$pattern" | tail -n +2
+
+         echo -e "\e[1m$errorstart\e[0m;$errorend" \
+             | fold -sw 40 \
+             | sed -e "s/^/    /"
+
+         if echo "$errorstart" | grep -q 'error: IDREF ".*" without matching ID'; then
+             id=$(echo "$errorstart" \
+                      | sed 's/error: IDREF "//' \
+                      | sed 's/" without matching ID//')
+             echo ""
+             echo "Maybe you intended one of the following IDs which do exist:"
+             suggest_id "$id" | sed 's/^/ - /'
+         fi
+
+         printf "\n\n\n"
+    done) < "$1"
+}
+
+suggest_id() {
+    find . -name '*.xml' -print0 \
+        | xargs -0 grep -r xml:id \
+        | sed -e 's/^.*xml:id=["'"'"']//' \
+        | sed -e 's/['"'"'"].*$//' \
+        | sort | uniq \
+        | fzf -f "$1"
+}
+
+scratch=$(mktemp -d -t tmp.XXXXXXXXXX)
+function finish {
+    rm -rf "$scratch"
+}
+trap finish EXIT
+
+anyfailed=0
+cat <<EOF
+    Feasability check on files without xincludes...
+
+A document is feasibly valid if it could be transformed into a valid
+document by inserting any number of attributes and child elements
+anywhere in the tree.
+
+This is equivalent to pretending every element is optional.
+
+This option may be useful while a document is still under
+construction.
+
+This option also disables checking that references are valid.
+EOF
+
+for f in $(files_without_xinclude); do
+    continue;
+    if jing -f "$RNG" "$f" > "$scratch/errors" 2>&1; then
+        echo "$f: OK"
+    else
+        echo "$f: Not feasibly valid:"
+
+        contextualize "$scratch/errors"
+        anyfailed=1
+    fi
+done
+
+if [ $anyfailed -eq 1 ]; then
+    cat <<EOF
+The component XML files aren't feasibly valid, which means they
+definitely won't be valid when merged together.
+
+Fix these errors first and then try again!
+EOF
+    exit 1
+fi
+
+printf "\n\n\n\n----\n\n\n\n"
+
+anyfailed=0
+cat <<EOF
+    Checking files without xincludes, ignoring reference errors...
+
+Ensures document fragments are valid, but without validating links
+are valid.
+
+EOF
+
+for f in $(files_without_xinclude); do
+    continue;
+    if jing -i "$RNG" "$f" > "$scratch/errors" 2>&1; then
+        echo "$f: OK"
+    else
+        echo "$f: Not valid:"
+
+        contextualize "$scratch/errors"
+        anyfailed=1
+    fi
+done
+
+if [ $anyfailed -eq 1 ]; then
+    cat <<EOF
+The component XML files aren't valid as subcomponents, which means
+they definitely won't be valid when merged together.
+
+Fix these errors first and then try again!
+EOF
+    exit 1
+fi
+
+printf "\n\n\n\n----\n\n\n\n"
+
+echo "Doing a combined check..."
+
+xmllint --nonet --xinclude --noxincludenode "$ROOT" --output "$COMBINED"
+if jing "$RNG" "$COMBINED" > "$scratch/errors" 2>&1; then
+    echo "$COMBINED: OK"
+else
+    echo "$COMBINED: Not valid:"
+
+    contextualize "$scratch/errors"
+    exit 1
+fi
