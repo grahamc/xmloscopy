@@ -32,6 +32,7 @@ stdenv.mkDerivation rec {
   };
 
   installPhase = ''
+    sed -i "s/hard to say/${version}/" ./xmloscopy
     type -P shellcheck && shellcheck ./xmloscopy
     chmod +x ./xmloscopy
     patchShebangs ./xmloscopy
