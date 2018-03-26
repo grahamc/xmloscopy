@@ -1,4 +1,4 @@
-[![asciicast](https://asciinema.org/a/vmh4vC162QnXY6FuadHkd1Xn6.png)](https://asciinema.org/a/vmh4vC162QnXY6FuadHkd1Xn6)
+[![asciicast](https://asciinema.org/a/J7YFeJo4yNc6sxTTrWjRE4JxA.png)](https://asciinema.org/a/J7YFeJo4yNc6sxTTrWjRE4JxA)
 
 Demo finding obviously broken stuff:
 
