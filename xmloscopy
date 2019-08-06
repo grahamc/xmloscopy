@@ -147,12 +147,10 @@ done
 
 if [ $anyfailed -eq 1 ]; then
     cat <<EOF
-The component XML files aren't feasibly valid, which means they
-definitely won't be valid when merged together.
+The component XML files aren't feasibly valid.
 
-Fix these errors first and then try again!
+Trying to continue, just in case the invalid files aren't referenced.
 EOF
-    exit 1
 fi
 
 printf "\n\n\n\n----\n\n\n\n"
