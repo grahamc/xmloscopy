@@ -79,7 +79,7 @@ contextualize() {
          fi
          echo "Line $line:"
 
-         pattern='^[[:space:]]*'"$line[[:space:]]"
+         pattern='^[[:space:]]*'"${line}[[:space:]]"
          cat -n "$filename" | grep -E -B3 "$pattern" | sed '$ d'
          echo -en "\e[1m"
          cat -n "$filename" | grep -E "$pattern"
