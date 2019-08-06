@@ -179,12 +179,10 @@ done
 
 if [ $anyfailed -eq 1 ]; then
     cat <<EOF
-The component XML files aren't valid as subcomponents, which means
-they definitely won't be valid when merged together.
+The component XML files aren't valid as subcomponents.
 
-Fix these errors first and then try again!
+Trying the whole document just in case.
 EOF
-    exit 1
 fi
 
 printf "\n\n\n\n----\n\n\n\n"
